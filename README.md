@@ -82,4 +82,4 @@ Built By
 Joshua Moreira
 BSc Computing (Security Specialization), Queen’s University
 
-This project was built entirely from scratch with no templates. Every system and decision was designed, written, debugged, and integrated manually. This readme was made by chat gpt. My email is joshuamoreirapersonal if you have any questions. 
+This project was built entirely from scratch with no templates. Every system and decision was designed, written, debugged, and integrated manually. This readme was made by chat gpt. My email is joshuamoreirapersonal@gmail.com if you have any questions. 
