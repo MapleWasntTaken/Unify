@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,6 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financialapp.financialapp.config.Env;
-import com.financialapp.financialapp.model.ApplicationUser;
 import com.financialapp.financialapp.model.PlaidItem;
 import com.financialapp.financialapp.repository.PlaidItemRepository;
 import com.financialapp.financialapp.repository.UserRepository;
@@ -43,7 +43,7 @@ public class PlaidController {
     @Autowired
     private PlaidService plaidService;
 
-    @PostMapping("/create-link-token")
+    @GetMapping("/create-link-token")
     public ResponseEntity<String> createLinkToken() {
         Integer userId = currentUserService.getCurrentUserId();
         HttpHeaders headers = new HttpHeaders();
@@ -110,16 +110,19 @@ public class PlaidController {
         return response;
     }
     
-    @PostMapping("/refresh-item")
+    /**@PostMapping("/refresh-item")
     public ResponseEntity<ApplicationUser> refreshItem(){
         ApplicationUser wrongTypeUser = currentUserService.getCurrentUser();
         ApplicationUser currentUser = userRepository.getUserWithPlaidItems(wrongTypeUser.getUserId().longValue());
-        for(PlaidItem plaidItem:currentUser.getPlaidItems()){
-            plaidService.refreshPlaidItem(plaidItem);
+        if(!(currentUser.getPlaidItems().isEmpty())){
+            for(PlaidItem plaidItem:currentUser.getPlaidItems()){
+                plaidService.refreshPlaidItem(plaidItem);
+            }
         }
-        
         return ResponseEntity.ok(currentUser);
 
         
-    }
+    }**/
+    //this is commented out because it is working and i dont want to fully remove it in case its needed.
+    // It shouldn't really be needed because the frontend should never need to force refetch data, backend should have live data from webhooks
 }

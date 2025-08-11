@@ -1,0 +1,90 @@
+.graph-container-container-container-light{
+    width:100%;
+    display:flex;
+    padding-bottom:2rem;
+    padding-top:1.7rem;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+}
+.graph-container-container-container-dark{
+    width:100%;
+    display:flex;
+    background-color: oklch(0.269 0 0);
+    justify-content: center;
+    align-items: center;
+    padding-bottom:2rem;
+    padding-top:1.7rem;
+    
+}
+.graph-container-container-light{
+    width:85%;
+    display:flex;
+    background-color: white;
+    flex-direction: column;
+    border:0.1rem solid black;
+    border-radius: 1rem;
+    justify-content: center;
+    align-items: center;
+    
+}
+.graph-container-container-dark{
+    width:85%;
+    display:flex;
+    background-color: oklch(0.269 0 0);
+    flex-direction: column;
+    border:0.1rem solid white;
+    border-radius: 1rem;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+.graph-container-dark{
+    max-width:80%;
+    display: flex;
+}
+.graph-container-light{
+    max-width: 80%;
+    display:flex;
+}
+.header-txt-dark{
+    color:white;
+    font-size:1.3rem;
+    font-weight:100;
+}
+.header-txt-light{
+    color:black;
+    font-size:1.3rem;
+    font-weight:100;
+}
+.graph-header-light,
+.graph-header-dark {
+    width:95%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem;  
+}    
+.graph-range-dropdown-dark {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 5px;
+  margin-top: 1rem;
+  background-color: oklch(0.269 0 0);
+  color:white;
+}
+.graph-range-dropdown-light {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 5px;
+  margin-top: 1rem;
+}
+.recharts-default-legend {
+  flex-wrap: wrap;
+  max-height: 3rem;
+  overflow-y: auto;
+}
+.recharts-suface{
+    z-index: 999;
+}

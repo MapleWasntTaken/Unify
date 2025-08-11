@@ -1,0 +1,58 @@
+/* src/css/AccountOverlay.css */
+.overlay-backdrop {
+  position: fixed; inset: 0; display: flex; justify-content: center; align-items: center;
+  padding: 24px; z-index: 1000; backdrop-filter: blur(2px);
+}
+.overlay-backdrop-light { background: rgba(0,0,0,0.35); }
+.overlay-backdrop-dark  { background: rgba(0,0,0,0.55); }
+
+.overlay-panel {
+  width: min(900px, 95vw); max-height: 90vh; overflow: hidden; border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column;
+}
+.overlay-panel-light { background: #ffffff; color: #0b0b0b; }
+.overlay-panel-dark  { background: #0f1115; color: #eaeaea; border: 1px solid #232733; }
+
+.overlay-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; border-bottom: 1px solid rgba(128,128,128,0.2);
+  position: sticky; top: 0; background: inherit; z-index: 1;
+}
+.overlay-title-wrap { display: flex; flex-direction: column; gap: 6px; }
+.overlay-title { font-size: 1.15rem; margin: 0; }
+.overlay-subtitle { display: flex; gap: 8px; align-items: center; }
+.pill { font-size: 0.75rem; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(128,128,128,0.35); }
+.pill-muted { opacity: 0.8; }
+
+.icon-btn { border: 0; background: transparent; cursor: pointer; line-height: 0; border-radius: 8px; padding: 6px; }
+.icon-btn:hover { background: rgba(128,128,128,0.15); }
+
+.overlay-content { overflow: auto; padding: 16px 18px; }
+
+.section { margin-bottom: 18px; }
+.section-title { font-size: 0.95rem; margin: 0 0 10px 0; opacity: 0.85; }
+
+.summary-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px;
+}
+@media (max-width: 640px) {
+  .summary-grid { grid-template-columns: 1fr; }
+}
+.summary-card { border: 1px solid rgba(128,128,128,0.25); border-radius: 12px; padding: 12px; }
+.label { font-size: 0.75rem; opacity: 0.7; }
+.value { font-size: 1.05rem; font-weight: 600; margin-top: 4px; }
+
+.placeholder { opacity: 0.7; padding: 8px 0; }
+
+.tx-list { list-style: none; padding: 0; margin: 0; }
+.tx-row {
+  display: grid; grid-template-columns: 1fr auto; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid rgba(128,128,128,0.15);
+}
+.tx-main { min-width: 0; }
+.tx-name { font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { display: flex; gap: 10px; font-size: 0.8rem; opacity: 0.8; margin-top: 3px; flex-wrap: wrap; }
+.tx-badge { padding: 1px 6px; border: 1px solid rgba(128,128,128,0.35); border-radius: 999px; }
+.tx-amount { font-variant-numeric: tabular-nums; font-weight: 700; }
+.tx-out { color: #c0392b; } /* money out */
+.tx-in  { color: #1e8449; } /* money in */

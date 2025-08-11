@@ -46,8 +46,8 @@ public class SecurityConfiguration{
             http
             .csrf(csrf -> csrf.ignoringRequestMatchers("/api/plaid/webhook"))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/","/api/getUserRole","/api/csrf-token","/static/**","/api/plaid/webhook","/api/login").permitAll()
-                .requestMatchers("/**").hasAnyRole("USER")
+                .requestMatchers("/","/api/whoami","/api/csrf-token","/api/plaid/webhook","/api/login","/api/logout","/api/signup").permitAll()
+                .requestMatchers("/**","/api/**","/api/plaid/**").hasAnyRole("USER")
                 .anyRequest().authenticated()
                 
             )
@@ -57,12 +57,13 @@ public class SecurityConfiguration{
                 .permitAll()
                 .successHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK))
                 .failureHandler((req, res, ex) -> res.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
-                .failureUrl("http://localhost:5173/signin?error=true")
 		    )
             .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/")
+                .logoutUrl("/api/logout")
                 .invalidateHttpSession(true)
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                })
                 .deleteCookies("JSESSIONID","remember-me-cookie")
                 .permitAll()
 

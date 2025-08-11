@@ -1,0 +1,123 @@
+
+.header-dark{
+    display:flex;
+    background-color:oklch(0.269 0 0);
+    justify-content: space-between;
+    align-items: center;
+    padding-inline:5vw;
+}
+
+body.dark .header-txt-top{
+        color:oklch(0.985 0 0);
+}
+
+.header-txt-top{
+    color:black;
+    padding-top:.45rem;
+}
+
+.header-txt-bottom{
+    color: oklch(0.54 0 255);
+}
+.logo-img{
+  background-color: none;
+  width:5rem;
+  height:100%;
+}
+.header-light{
+    display:flex;
+    background-color:white;
+    justify-content: space-between;
+    align-items: center;
+    padding-inline:5vw;
+}
+.header-txt{
+    padding:1rem;
+    padding-right:0;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1.7rem;
+}
+.user-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 2rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  color:inherit;
+}
+body.dark .user-icon {
+  color: oklch(0.985 0 0);
+}
+
+.user-icon {
+  color: black;
+}
+.theme-icon {
+  font-size: 1.25rem;
+  display: inline-block;
+  vertical-align: middle;
+  margin-bottom:.45rem;
+}
+body.dark .login-btn{
+  color:black;
+  font-size:1.5rem;
+  border:.2rem solid white;
+  border-radius:1rem;
+  border-color:white;
+  background-color: white;
+  padding-left:1.2rem;
+  padding-right:.8rem;
+  padding-bottom: .2rem;
+  white-space: nowrap;
+}
+.login-btn{
+  color:white;
+  font-size:1.5rem;
+  border:.175rem solid black;
+  border-radius:.9rem;
+  border-color:black;
+  background-color: black;
+  padding-left:1.2rem;
+  padding-right:.8rem;
+  padding-bottom: .2rem;
+  white-space: nowrap;
+}
+.user-icon-light {
+  color: oklch(0.985 0 0);
+}
+.buttons{
+  display:flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap:1rem;
+  padding-top: .5rem;
+}
+.account-btn-div{
+  align-items: center;
+  display: flex;
+
+}
+.account-btn{
+  display: flex;
+  justify-content: center;
+  align-items:center;
+  background-color: rgb(72, 145, 255);
+  border-radius:1rem;
+  border:.5rem  rgb(72, 145, 255) solid;
+  color:white;
+  font-weight: 450;
+  flex-wrap: nowrap;
+  text-wrap: nowrap;
+}
+.divider{
+  width:100%;
+  color:blue;
+}

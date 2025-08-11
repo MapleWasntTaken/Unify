@@ -3,7 +3,6 @@ let csrfHeader: string | null = null;
 export async function loadCsrfToken(): Promise<void>{
     
     const res = await fetch("/api/csrf-token",{credentials:"include"})
-    console.log(res);
     const data = await res.json();
     csrfToken = data.token;
     csrfHeader = data.headerName;

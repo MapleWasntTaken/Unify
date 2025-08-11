@@ -1,0 +1,14 @@
+.divider-dark{
+    width:100%;
+    border-bottom:1px solid rgb(99, 99, 99);
+    background-color:oklch(0.269 0 0);
+    padding-top:.1rem;
+    padding-bottom:0;
+}
+.divider-light{
+    width:100%;
+    border-bottom:1px solid rgb(99, 99, 99);
+    background-color:white(0.269 0 0);
+    padding-top:.1rem;
+    padding-bottom:0;
+}

@@ -1,5 +1,6 @@
 package com.financialapp.financialapp.model;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +31,11 @@ public class AccountItem {
     private Double currentBalance;
     private Double availableBalance;
     private Double creditLimit;
+    private String mask;
+    private LocalDate lastStatementDate;
+    private LocalDate nextPaymentDueDate;
+    private Double statementBalance;
+    private Double minimumPaymentAmount;
 
     @ManyToOne
     @JoinColumn(name = "plaid_item_id")
@@ -39,6 +45,40 @@ public class AccountItem {
     @OneToMany(mappedBy = "accountItem", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private final List<TransactionItem> transactions = new ArrayList<>();
+
+    
+
+    public LocalDate getLastStatementDate() {
+        return lastStatementDate;
+    }
+
+    public void setLastStatementDate(LocalDate lastStatementDate) {
+        this.lastStatementDate = lastStatementDate;
+    }
+
+    public LocalDate getNextPaymentDueDate() {
+        return nextPaymentDueDate;
+    }
+
+    public void setNextPaymentDueDate(LocalDate nextPaymentDueDate) {
+        this.nextPaymentDueDate = nextPaymentDueDate;
+    }
+
+    public Double getStatementBalance() {
+        return statementBalance;
+    }
+
+    public void setStatementBalance(Double statementBalance) {
+        this.statementBalance = statementBalance;
+    }
+
+    public Double getMinimumPaymentAmount() {
+        return minimumPaymentAmount;
+    }
+
+    public void setMinimumPaymentAmount(Double minimumPaymentAmount) {
+        this.minimumPaymentAmount = minimumPaymentAmount;
+    }
 
     public Long getId() {
         return id;
@@ -155,5 +195,13 @@ public class AccountItem {
         sb.append(", creditLimit=").append(creditLimit);
         sb.append('}');
         return sb.toString();
+    }
+
+    public String getMask() {
+        return mask;
+    }
+
+    public void setMask(String mask) {
+        this.mask = mask;
     }
 }

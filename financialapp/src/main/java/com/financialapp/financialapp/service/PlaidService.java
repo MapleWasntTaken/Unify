@@ -76,7 +76,7 @@ public class PlaidService {
         
     }
     @SuppressWarnings("UnnecessaryBoxing")
-    public void refreshPlaidItemAccounts(PlaidItem plaidItem){
+    public void refreshPlaidItemAccounts(PlaidItem plaidItem) {
         String accessToken = plaidItem.getAccessToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -88,56 +88,92 @@ public class PlaidService {
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-        
+
         ResponseEntity<String> accountGet = restTemplate.postForEntity(
             "https://production.plaid.com/accounts/get",
             request,
-             String.class
+            String.class
         );
+
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(accountGet.getBody());
-            ApplicationUser currentUser =  currentUserService.getCurrentUser();
+            ApplicationUser currentUser = currentUserService.getCurrentUser();
             JsonNode Accounts = root.get("accounts");
-            for (JsonNode ac : Accounts) {
 
+            // Optional: prepare liabilities map in advance
+            Map<String, JsonNode> liabilitiesMap = new HashMap<>();
+            ResponseEntity<String> liabilitiesGet = restTemplate.postForEntity(
+                "https://production.plaid.com/liabilities/get",
+                request,
+                String.class
+            );
+            JsonNode liabilitiesRoot = mapper.readTree(liabilitiesGet.getBody());
+            JsonNode creditLiabilities = liabilitiesRoot.path("liabilities").path("credit");
+
+            for (JsonNode liab : creditLiabilities) {
+                liabilitiesMap.put(liab.get("account_id").asText(), liab);
+            }
+
+            for (JsonNode ac : Accounts) {
                 String plaidAccountId = ac.get("account_id").asText();
                 Optional<AccountItem> existing = accountItemRepository
-                .findByPlaidItem_UserAndAccountId(currentUser, plaidAccountId);
+                    .findByPlaidItem_UserAndAccountId(currentUser, plaidAccountId);
 
                 AccountItem ai = existing.orElse(new AccountItem());
-                ai.setAccountId(ac.get("account_id").asText());
+                ai.setAccountId(plaidAccountId);
                 ai.setPlaidItem(plaidItem);
                 ai.setName(ac.get("name").asText());
                 ai.setOfficialName(ac.get("official_name").asText());
                 ai.setSubtype(ac.get("subtype").asText());
+                ai.setMask(ac.get("mask").asText());
 
                 JsonNode balances = ac.get("balances");
-                ai.setCurrentBalance(Double.valueOf(balances.get("current").asDouble()));
-                if(ai.getSubtype().equals("credit card")){
+                ai.setCurrentBalance(balances.get("current").asDouble());
+
+                if (ai.getSubtype().equals("credit card")) {
                     ai.setCreditLimit(balances.get("limit").asDouble());
                     ai.setAvailableBalance(0D);
-                }
 
-                if(ai.getSubtype().equals("checking")){
+                    
+                    JsonNode liab = liabilitiesMap.get(plaidAccountId);
+                    if (liab != null) {
+                        ai.setStatementBalance(liab.path("last_statement_balance").asDouble());
+
+                        String lastStatementStr = liab.path("last_statement_issue_date").asText(null);
+                        if (lastStatementStr != null && !lastStatementStr.isBlank()) {
+                            ai.setLastStatementDate(LocalDate.parse(lastStatementStr));
+                        } else {
+                            ai.setLastStatementDate(null);
+                        }
+
+                        String nextPaymentStr = liab.path("next_payment_due_date").asText(null);
+                        if (nextPaymentStr != null && !nextPaymentStr.isBlank()) {
+                            ai.setNextPaymentDueDate(LocalDate.parse(nextPaymentStr));
+                        } else {
+                            ai.setNextPaymentDueDate(null);
+                        }
+
+                        ai.setMinimumPaymentAmount(liab.path("minimum_payment_amount").asDouble());
+                    }
+
+
+                } else if (ai.getSubtype().equals("checking")) {
                     ai.setAvailableBalance(balances.get("available").asDouble());
                     ai.setCreditLimit(0D);
                 }
-                accountItemRepository.save(ai);
-                             
-                plaidItem.addAccountItem(ai);
-                System.out.println(plaidItem.getAccountItems());
-                
 
+                accountItemRepository.save(ai);
+                plaidItem.addAccountItem(ai);
                 plaidItemRepository.save(plaidItem);
             }
-            
-
 
         } catch (Exception e) {
             System.err.println("Transaction sync failed: " + e.getMessage());
+            e.printStackTrace();
         }
-    }
+}
+
     public void refreshPlaidItemTransactions(PlaidItem plaidItem){
 
         String accessToken = plaidItem.getAccessToken();

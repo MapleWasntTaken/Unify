@@ -1,14 +1,15 @@
-import { SignIn } from "./components/signin"
 import { Routes, Route } from "react-router-dom";
-import { SignUp } from "./components/signup";
-import { BankTiles } from "./components/BankTile/BankTiles";
+import {Home} from "./pages/Home";
+import { darkMode } from "./utils/DarkMode";
+import { useAuthBootstrap } from "./hooks/UseAuthBootstrap";
 export default function App() {
-
+    if (darkMode.value) {
+      document.body.classList.add('dark');
+    }
+    useAuthBootstrap();
     return (
       <Routes>
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/home" element={<BankTiles />}/>
+        <Route path="/" element = {<Home />}/>
       </Routes>
     )
 
