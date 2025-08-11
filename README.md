@@ -1,85 +1,62 @@
-# 💸 Finapp — Personal Finance Dashboard
+Unify Finance
+Unify Finance is a unified financial tool that allows users to access and manage all their bank data from one location.
 
-**Finapp** is a full-stack personal finance web app that connects to real bank accounts using Plaid, tracks spending, and displays it in a React dashboard. Built from scratch using Spring Boot, React + TypeScript, PostgreSQL, and Vite.
+Tech Stack
+Backend
 
-## Features
+Java Spring Boot (folder: financialapp)
 
-- Secure login with Spring Security
-- Plaid bank account linking
-- Transaction and balance tracking
-- Dashboard with dynamic account tiles
-- Monorepo with frontend and backend
+JPA / Hibernate
 
-## Tech Stack
+PostgreSQL
 
-- **Frontend:** React, TypeScript, Vite
-- **Backend:** Java 17, Spring Boot, Spring Security
-- **Database:** PostgreSQL
-- **Integration:** Plaid API
-- **Tools:** Node.js, Maven, Git
+Runs on port 8080
 
-## Project Structure
+Frontend
 
-/financial-app/
-├── financialapp/ (Spring Boot backend)
-├── financial-frontend/ (React + Vite frontend)
-└── README.md
+React + Vite + TypeScript (folder: financial-frontend)
+
+Runs on port 5173
+
+Getting Started
+1. Backend Setup
+Install and configure PostgreSQL on your machine.
+
+Update application.properties with your own PostgreSQL username, password, and database name.
+
+Create a .env file in the backend root containing:
+PLAID_CLIENT_ID=your_client_id
+PLAID_SECRET=your_secret
+PLAID_ENV=sandbox_or_production
+ENCRYPTION_KEY=your_encryption_key
+
+Install dotenv if required (npm install dotenv in backend directory, though Spring Boot may not need it depending on config).
+
+2. Frontend Setup
+Navigate to financial-frontend and install dependencies:
+
+npm install
+Start the development server:
+npm run dev
 
 
+Running the App
 
-## How to Run This Project
-
-**Requirements:**
-- Java 17
-- Node.js (v18+)
-- PostgreSQL running locally
-- Git
-
-### 1. Clone the repo
-
-
-git clone https://github.com/MapleWasntTaken/finance-app.git
-cd finance-app
-2. Run the Backend
-
+Backend:
 cd financialapp
 ./mvnw spring-boot:run
-If you're on Windows:
 
-mvnw.cmd spring-boot:run
-Make sure PostgreSQL is running and the database finapp exists.
-
-In financialapp/src/main/resources/application.properties, configure:
-
-properties
-
-Edit
-spring.datasource.url=jdbc:postgresql://localhost:5432/finapp
-spring.datasource.username=your_db_user
-spring.datasource.password=your_db_password
-
-make a env file with 
-PLAID_CLIENT_ID=your_plaid_client_id
-PLAID_SECRET=your_plaid_secret
-PLAID_ENV=sandbox
-ENCRYPTION_KEY=your_key
-3. Run the Frontend in terminal
-cd frontendfilepath
-npm install
+Frontend:
+cd financial-frontend
 npm run dev
-App will run at http://localhost:5173
 
-4. Log In and Use the App
-Visit the site
+Visit the app at:
+http://localhost:5173
 
-Sign in using the login form
+Live Demo
+If you don’t want to run the project locally, you can visit:
+unifyfinance.ca
 
-Link a bank account (Plaid sandbox)
-
-See accounts and transactions
-
-Built By
-Joshua Moreira
-BSc Computing (Security Specialization), Queen’s University
-
-This project was built entirely from scratch with no templates. Every system and decision was designed, written, debugged, and integrated manually. This readme was made by chat gpt. My email is joshuamoreirapersonal@gmail.com if you have any questions. 
+Contact
+For questions or feedback, email:
+joshuamoreirapersonal@gmail.com
