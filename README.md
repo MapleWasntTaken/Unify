@@ -60,3 +60,5 @@ unifyfinance.ca
 Contact
 For questions or feedback, email:
 joshuamoreirapersonal@gmail.com
+
+Privacy Policy and TOS found at unifyfinance.ca
