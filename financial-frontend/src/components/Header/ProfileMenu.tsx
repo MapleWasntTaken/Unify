@@ -4,7 +4,7 @@ import "../../css/ProfileMenu.css";
 import { useDarkMode } from "../../hooks/UseDarkMode";
 import { BankData } from "../../types/BankData";
 import { authState } from "../../utils/authState";
-import { GetCsrf } from "../../utils/GetCSRF";
+import { GetCsrf, WipeCSRF } from "../../utils/GetCSRF";
 
 export function ProfileMenu() {
   const [open, setOpen] = useState(false);
@@ -41,6 +41,7 @@ export function ProfileMenu() {
       credentials: "include",
       headers: { ...csrf },
     });
+    WipeCSRF();
     authState.set(false);
   };
 

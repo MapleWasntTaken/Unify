@@ -51,6 +51,11 @@ public class SecurityConfiguration{
                 .anyRequest().authenticated()
                 
             )
+            .exceptionHandling(e -> e
+                .authenticationEntryPoint((req, res, ex) -> 
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                )
+            )
             .userDetailsService(userDetailsService)
             .formLogin(form -> form
                 .loginProcessingUrl("/api/login")
@@ -77,12 +82,12 @@ public class SecurityConfiguration{
     @Bean
     public TokenBasedRememberMeServices rememberMeServices(UserDetailsService userDetailsService) {
         TokenBasedRememberMeServices rememberMeServices = new TokenBasedRememberMeServices(
-            "mySuperSecretKey", // 🔑 Replace this with a secure random string in prod
+            "mySuperSecretKey",
             userDetailsService
         );
-        rememberMeServices.setAlwaysRemember(false); // only remembers if "remember-me" is checked
+        rememberMeServices.setAlwaysRemember(false);
         rememberMeServices.setCookieName("remember-me-cookie");
-        rememberMeServices.setTokenValiditySeconds(60 * 60 * 24 * 14); // 14 days
+        rememberMeServices.setTokenValiditySeconds(60 * 60 * 24 * 14);
         return rememberMeServices;
     }
 
@@ -97,11 +102,16 @@ public class SecurityConfiguration{
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173")
+                        .allowedOrigins("http://localhost:5173","https://unifyfinance.ca")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowCredentials(true);
             }
         };
     }
+    /**@Bean
+        public WebSecurityCustomizer webSecurityCustomizer() {
+            return (web) -> web.debug(true);
+        }**///for debugging spring security see also app properties for line starting with logging to enable.
 
+    
 }

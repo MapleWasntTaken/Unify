@@ -10,9 +10,15 @@ export async function loadCsrfToken(): Promise<void>{
 }
 
 export async function GetCsrf(): Promise<Record<string,string>>{
-    await loadCsrfToken();
-
+    if(csrfHeader === null){
+        console.log("here");
+        await loadCsrfToken();
+    }
     return{
         [csrfHeader!]: csrfToken!
     };
+}
+export function WipeCSRF(){
+    csrfToken= null;
+    csrfHeader = null;
 }

@@ -8,16 +8,16 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.financialapp.financialapp.model.ApplicationUser;
 import com.financialapp.financialapp.repository.UserRepository;
 import com.financialapp.financialapp.service.CurrentUserService;
 
-@Controller
+@RestController
 public class loginController {
 
     @Autowired
@@ -33,7 +33,6 @@ public class loginController {
     public ResponseEntity<String> signup(@RequestBody SignupRequest data) {
         String email = data.email;
         String password = data.password;
-
         if(userRepository.findByEmail(email).isPresent()){return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use");}
         if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password does not meet requirements");

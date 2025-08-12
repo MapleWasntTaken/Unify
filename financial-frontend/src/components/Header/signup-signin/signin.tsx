@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { GetCsrf } from "../../../utils/GetCSRF";
+import { GetCsrf, WipeCSRF } from "../../../utils/GetCSRF";
 import { authState } from "../../../utils/authState";
 import {ResetBankDataCache } from "../../../utils/GetBankData";
 import "../../../css/SignIn.css";
@@ -35,6 +35,7 @@ export function SignIn({ onClose, onSwap}: { onClose: () => void; onSwap: () => 
           });
 
           if (res.ok) {
+            WipeCSRF();
             ResetBankDataCache();
             authState.set(true);
             onClose();
