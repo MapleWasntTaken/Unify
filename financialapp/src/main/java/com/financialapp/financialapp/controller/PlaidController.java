@@ -2,6 +2,7 @@ package com.financialapp.financialapp.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +21,9 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financialapp.financialapp.config.Env;
+import com.financialapp.financialapp.model.AccountItem;
 import com.financialapp.financialapp.model.PlaidItem;
+import com.financialapp.financialapp.repository.AccountItemRepository;
 import com.financialapp.financialapp.repository.PlaidItemRepository;
 import com.financialapp.financialapp.repository.UserRepository;
 import com.financialapp.financialapp.service.CurrentUserService;
@@ -36,6 +40,9 @@ public class PlaidController {
 
     @Autowired
     private PlaidItemRepository plaidItemRepository;
+
+    @Autowired
+    private AccountItemRepository accountItemRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -109,7 +116,33 @@ public class PlaidController {
         }
         return response;
     }
-    
+    @Transactional
+    @PostMapping("/remove-item")
+    public ResponseEntity<?> removeItem(@RequestBody String x){
+        System.out.println(x);
+        if (x == null) {
+            return ResponseEntity.badRequest().body("accountId is required");
+        }
+        AccountItem ai;
+        Optional<AccountItem> y = accountItemRepository.findByAccountId(x);
+        if(y.isPresent()){
+            ai = y.get();
+            if(ai.getPlaidItem().getAccountItems().size() == 1){
+                System.out.println("1");
+                plaidService.removeItem(ai.getPlaidItem().getAccessToken());
+                plaidItemRepository.deleteByPlaidItemId(ai.getPlaidItem().getPlaidItemId());
+                ai.getPlaidItem().getUser().removePlaidItem(ai.getPlaidItem());
+                return ResponseEntity.ok("Plaid Item Removed");
+            }else{
+                System.out.println("2");
+                accountItemRepository.deleteByaccountId(ai.getAccountId());
+                ai.getPlaidItem().removeAccountItem(ai);
+                return ResponseEntity.ok("Account Item Removed");
+            }
+        }
+        System.out.println("failed");
+        return ResponseEntity.status(404).body("AccountItem Not Found");
+    }
     /**@PostMapping("/refresh-item")
     public ResponseEntity<ApplicationUser> refreshItem(){
         ApplicationUser wrongTypeUser = currentUserService.getCurrentUser();

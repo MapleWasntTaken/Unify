@@ -21,7 +21,6 @@ export function BankTiles() {
   }, [accounts]);
 
 
-  // 2️⃣ Logged out state
   if (!isLoggedIn) {
     return (
       <div className={isDark ? "bank-tiles-container-container-dark" : "bank-tiles-container-container-light"}>
@@ -45,8 +44,6 @@ export function BankTiles() {
       </div>
     );
   }
-  
-  // 1️⃣ Loading state
   if (isLoading) {
     return (
       <div className={isDark ? "bank-tiles-container-container-dark" : "bank-tiles-container-container-light"}>
@@ -76,7 +73,6 @@ export function BankTiles() {
 
 
 
-  // 4️⃣ Logged in + Has accounts
   return (
     <div className={isDark ? "bank-tiles-container-container-dark" : "bank-tiles-container-container-light"}>
       <div className={isDark ? "bank-tiles-container-dark" : "bank-tiles-container-light"}>

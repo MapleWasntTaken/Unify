@@ -55,7 +55,7 @@ export function PlaidFrontend({ onClose }: { onClose: () => void }) {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            ...csrf!,
+            ...csrf!
           },
           body: JSON.stringify({ public_token }),
         });

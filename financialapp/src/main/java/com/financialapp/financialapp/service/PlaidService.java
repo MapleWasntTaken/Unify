@@ -246,6 +246,25 @@ public class PlaidService {
         }
     }
 
+    public void removeItem(String s){
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        Map<String, Object> body = Map.of(
+            "client_id", Env.PLAID_CLIENT_ID,
+            "secret", Env.PLAID_SECRET,
+            "access_token", s
+        );
+                HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<String> res = restTemplate.postForEntity(
+            "https://production.plaid.com/item/remove",
+            request,
+            String.class
+        );
+        System.out.println(res.getBody()+"    res status:" + res.getStatusCode() );
+    }
+
 
 
 }

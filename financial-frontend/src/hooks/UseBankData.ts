@@ -4,7 +4,7 @@ import { AccountItem } from "../types/AccountItem";
 import { TransactionItem } from "../types/TransactionItem";
 
 export function useBankData(): [AccountItem[], Map<string, TransactionItem[]>] {
-  const [accounts, setAccounts] = useState<AccountItem[] | null>(null);
+  const [accounts, setAccounts] = useState(BankData.getAccounts());
   const [transactions, setTransactions] = useState(BankData.getTransactions());
 
   useEffect(() => {

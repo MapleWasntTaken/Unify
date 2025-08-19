@@ -11,7 +11,6 @@ export async function loadCsrfToken(): Promise<void>{
 
 export async function GetCsrf(): Promise<Record<string,string>>{
     if(csrfHeader === null){
-        console.log("here");
         await loadCsrfToken();
     }
     return{

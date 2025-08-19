@@ -36,6 +36,8 @@ public class WebhookControllers {
         String webhookType = (String) payload.get("webhook_type");
         String webhookCode = (String) payload.get("webhook_code");
         String itemId = (String) payload.get("item_id");
+        
+        System.out.println(webhookType);
 
 
         //On new transaction webhook ping, refreshPlaidItem is called which updates all accounts and transactions for the plaid item corresponding to webhook ping

@@ -1,0 +1,165 @@
+/* src/components/settings/settings.css */
+
+/* Overlay */
+.uf-settings-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200; /* above your dropdown */
+}
+
+/* Card */
+.uf-settings-card {
+  width: 92%;
+  max-width: 520px;
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 34px rgba(0,0,0,.28);
+  animation: uf-slideUp .22s ease-out;
+}
+
+.uf-settings-card.uf-dark {
+  background-color: #1e1e1e;
+  color: #fff;
+}
+
+.uf-settings-card.uf-light {
+  background-color: #fff;
+  color: #111;
+}
+
+/* Header */
+.uf-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .75rem;
+}
+
+.uf-settings-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.uf-settings-close {
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  padding: 0 .5rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1.6;
+}
+
+/* Sections */
+.uf-settings-section { margin-bottom: 1.25rem; }
+
+.uf-settings-section-title {
+  font-size: .95rem;
+  font-weight: 600;
+  opacity: .8;
+  margin-bottom: .5rem;
+}
+
+/* List */
+.uf-settings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.uf-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: .6rem 0;
+  border-bottom: 1px solid rgba(128,128,128,.18);
+}
+
+.uf-settings-row:last-child { border-bottom: none; }
+
+.uf-settings-row button,
+.uf-settings-row a {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: .92rem;
+  cursor: pointer;
+  padding: .15rem 0;
+  text-decoration: none;
+}
+
+.uf-settings-meta {
+  font-size: .85rem;
+  opacity: .7;
+}
+
+/* Danger */
+.uf-destructive button {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+/* Anim */
+@keyframes uf-slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* overlay + card from earlier */
+.uf-settings-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1200;
+}
+.uf-settings-card { width:92%; max-width: 560px; border-radius: 14px; padding: 1.25rem;
+  box-shadow: 0 10px 34px rgba(0,0,0,.28); animation: uf-slideUp .22s ease-out; }
+.uf-settings-card.uf-dark { background:#1e1e1e; color:#fff; }
+.uf-settings-card.uf-light { background:#fff; color:#111; }
+.uf-settings-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.75rem; }
+.uf-settings-close { background:none; border:1px solid currentColor; border-radius:8px; padding:0 .5rem; font-size:1.1rem; cursor:pointer; line-height:1.6; }
+
+.uf-settings-section { margin-bottom: 1.25rem; }
+.uf-settings-section-title { font-size:.95rem; font-weight:600; opacity:.85; margin-bottom:.5rem; }
+.uf-settings-list { list-style:none; margin:0; padding:0; }
+.uf-settings-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:.6rem 0; border-bottom:1px solid rgba(128,128,128,.18); }
+.uf-settings-row:last-child { border-bottom:none; }
+.uf-settings-meta { font-size:.85rem; opacity:.7; }
+.uf-empty { padding:.75rem 0; opacity:.7; }
+
+/* accounts list */
+.uf-accounts-list { list-style:none; margin:0; padding:0; }
+.uf-account-row {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:.55rem 0; border-bottom:1px solid rgba(128,128,128,.18); position:relative;
+}
+.uf-account-row:last-child { border-bottom:none; }
+.uf-account-main { display:flex; align-items:center; gap:.6rem; min-width:0; }
+.uf-account-icon { width:28px; height:28px; display:grid; place-items:center; border-radius:999px;
+  background: rgba(127,127,127,.12); flex: 0 0 auto;
+}
+.uf-account-text { min-width:0; }
+.uf-account-title { font-size:.95rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.uf-account-sub { font-size:.82rem; opacity:.75; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* trash button appears only on hover/focus */
+.uf-trash-btn {
+  opacity: 0; transform: translateX(6px); transition: opacity .12s ease, transform .12s ease;
+  background: none; border: 1px solid rgba(128,128,128,.3); border-radius: 8px; padding: .35rem .45rem;
+  color: inherit; cursor: pointer; flex: 0 0 auto;
+}
+.uf-account-row:hover .uf-trash-btn,
+.uf-trash-btn:focus-visible {
+  opacity: 1; transform: translateX(0);
+}
+.uf-trash-btn:hover { background: rgba(127,127,127,.12); }
+
+/* anim */
+@keyframes uf-slideUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }

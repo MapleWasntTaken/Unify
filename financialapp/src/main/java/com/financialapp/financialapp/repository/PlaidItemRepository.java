@@ -17,4 +17,6 @@ public interface PlaidItemRepository extends JpaRepository<PlaidItem, Long> {
     Optional<PlaidItem> findByUserAndAccessToken(ApplicationUser applicationUser, String accessToken);
 
     Optional<PlaidItem> findByPlaidItemId(String itemId);
+
+    void deleteByPlaidItemId(String plaidItemId);
 }
