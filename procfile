@@ -1,1 +1,1 @@
-web: java -Dserver.port=$PORT -jar financial-app/target/*.jar
+web: java -Dserver.port=$PORT -jar financialapp/target/*.jar
