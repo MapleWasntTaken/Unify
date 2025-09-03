@@ -31,6 +31,7 @@ import com.financialapp.financialapp.model.TransactionItem;
 import com.financialapp.financialapp.repository.PlaidItemRepository;
 import com.financialapp.financialapp.repository.UserRepository;
 import com.financialapp.financialapp.service.CurrentUserService;
+import com.financialapp.financialapp.service.PlaidService;
 
 import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/api")
@@ -55,6 +56,9 @@ public class utilityControllers {
 
     @Autowired
     private CurrentUserService currentUserService;
+
+    @Autowired
+    private PlaidService plaidService;
 
 
     public RestTemplate restTemplate = new RestTemplate();
@@ -120,11 +124,20 @@ public class utilityControllers {
         
         ApplicationUser wrongTypeUser = currentUserService.getCurrentUser();
         ApplicationUser currentUser = userRepository.getUserWithPlaidItems(wrongTypeUser.getUserId().longValue());
-        
         Map<String,Object> data = new HashMap<>();
-        List<frontEndAccountItem> accounts = new ArrayList();
+        List<frontEndAccountItem> accounts = new ArrayList<frontEndAccountItem>();
         List<frontEndTransactionItem> transactions = new ArrayList();
+        List<Map<String,String>> accountStatus = new ArrayList();
         for(PlaidItem pl : currentUser.getPlaidItems()){
+            if(pl.getFilled()==false){
+                try {
+                    plaidService.refreshPlaidItem(pl);
+                } catch (Exception e) {
+                }
+            }
+            Map<String,String> x = new HashMap<>();
+            x.put("Filled",Boolean.toString(pl.getFilled()));
+            x.put("Update",Boolean.toString(pl.getUpdate()));
             for(AccountItem ai : pl.getAccountItems()){
                 frontEndAccountItem feai = new frontEndAccountItem(ai);
                 accounts.add(feai);
@@ -132,10 +145,16 @@ public class utilityControllers {
                     frontEndTransactionItem feti = new frontEndTransactionItem(ti);
                     transactions.add(feti);
                 }
+                x.put("AccountId",ai.getAccountId());
             }
+            accountStatus.add(x);
+            
         }
         data.put("Accounts",accounts);
         data.put("Transactions",transactions);
+        data.put("Statuses",accountStatus);
+        
+        System.out.println(data);
         return ResponseEntity.ok(data);
 
     }

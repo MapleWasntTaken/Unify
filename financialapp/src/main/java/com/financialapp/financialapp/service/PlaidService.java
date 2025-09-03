@@ -65,8 +65,12 @@ public class PlaidService {
     @Transactional
     public void refreshPlaidItem(PlaidItem plaidItem){
         try {
+            plaidItem.setFilled(true);
+            plaidItem.setUpdate(false);
             refreshPlaidItemAccounts(plaidItem);
             refreshPlaidItemTransactions(plaidItem);
+            
+
         } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException("Failed to sync Plaid item", e);
@@ -127,7 +131,6 @@ public class PlaidService {
                 ai.setOfficialName(ac.get("official_name").asText());
                 ai.setSubtype(ac.get("subtype").asText());
                 ai.setMask(ac.get("mask").asText());
-
                 JsonNode balances = ac.get("balances");
                 ai.setCurrentBalance(balances.get("current").asDouble());
 

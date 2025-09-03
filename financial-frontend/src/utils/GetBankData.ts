@@ -11,6 +11,7 @@ export function isBankDataLoaded(): boolean {
 }
 
 export async function GetBankDetails(): Promise<void> {
+  console.log("we're here");
   if (isLoaded) return;
 
   if (!csrf) {
@@ -27,11 +28,11 @@ export async function GetBankDetails(): Promise<void> {
   });
 
   if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
-
   const data = await res.json();
   const Accounts = data.Accounts;
   const Transactions = data.Transactions;
-
+  const Statuses = data.Statuses;
+  console.log(data);
   const parsedAccounts: AccountItem[] = [];
   const grouped = new Map<string, TransactionItem[]>();
 
@@ -71,6 +72,24 @@ export async function GetBankDetails(): Promise<void> {
         x.paymentChannel
       )
     );
+  }
+  for(const x of Statuses){
+    if(x.Filled ==="false"){
+      console.log("Account not filled yet, retrying in 5 seconds...");
+
+      setTimeout(() => {
+        GetBankDetails();
+      }, 5000);
+
+      return;
+    }
+    if(x.Update ==="True"){
+      parsedAccounts.forEach((y)=>{
+        if( y.accountId===x.AccountId){
+            y.status = true;
+        }
+      })
+    }
   }
 
   BankData.setAccounts(parsedAccounts);

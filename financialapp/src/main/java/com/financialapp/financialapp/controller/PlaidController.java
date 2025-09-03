@@ -66,7 +66,7 @@ public class PlaidController {
             "products", List.of("transactions", "liabilities","assets"),
             "country_codes", List.of("US", "CA"),
             "language", "en",
-            "webhook","https://f9c17496f8e9.ngrok-free.app/api/plaid/webhook"
+            "webhook","api.unifyfinance.ca/api/plaid/webhook"
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -107,9 +107,10 @@ public class PlaidController {
             p.setAccessToken(accessToken);
             p.setInstitutionId(payload.get("institution_id"));
             p.setInstitutionName(payload.get("institution_name"));
+            p.setFilled(false);
+            p.setUpdate(false);
             plaidItemRepository.save(p);
 
-            plaidService.refreshPlaidItem(p);
         } 
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Token parse error");
@@ -128,21 +129,20 @@ public class PlaidController {
         if(y.isPresent()){
             ai = y.get();
             if(ai.getPlaidItem().getAccountItems().size() == 1){
-                System.out.println("1");
                 plaidService.removeItem(ai.getPlaidItem().getAccessToken());
                 plaidItemRepository.deleteByPlaidItemId(ai.getPlaidItem().getPlaidItemId());
                 ai.getPlaidItem().getUser().removePlaidItem(ai.getPlaidItem());
                 return ResponseEntity.ok("Plaid Item Removed");
             }else{
-                System.out.println("2");
                 accountItemRepository.deleteByaccountId(ai.getAccountId());
                 ai.getPlaidItem().removeAccountItem(ai);
                 return ResponseEntity.ok("Account Item Removed");
             }
         }
-        System.out.println("failed");
         return ResponseEntity.status(404).body("AccountItem Not Found");
     }
+    //@PostMapping("/create-link-token")
+    
     /**@PostMapping("/refresh-item")
     public ResponseEntity<ApplicationUser> refreshItem(){
         ApplicationUser wrongTypeUser = currentUserService.getCurrentUser();
@@ -158,4 +158,5 @@ public class PlaidController {
     }**/
     //this is commented out because it is working and i dont want to fully remove it in case its needed.
     // It shouldn't really be needed because the frontend should never need to force refetch data, backend should have live data from webhooks
+    
 }

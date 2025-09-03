@@ -35,14 +35,20 @@ public class PlaidItem {
     private String accessToken;
     private String institutionId;
     private String institutionName;
-
+    private boolean update;
+    private boolean filled;
     
     @OneToMany(mappedBy = "plaidItem", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private final List<AccountItem> accountItems = new ArrayList<>();
 
 
-
+    public void setUpdate(boolean val){
+        this.update = val;
+    }
+    public boolean getUpdate(){
+        return this.update;
+    }
 
     public List<AccountItem> getAccountItems() {
         return accountItems;
@@ -111,6 +117,12 @@ public class PlaidItem {
 
     public void setInstitutionName(String institutionName) {
         this.institutionName = institutionName;
+    }
+    public boolean getFilled() {
+        return filled;
+    }
+    public void setFilled(boolean filled) {
+        this.filled = filled;
     }
 
 

@@ -47,6 +47,10 @@ public class WebhookControllers {
             if(x.isPresent()){plaidService.refreshPlaidItem(x.get());}
             
         }
+        if("ITEM_LOGIN_REQUIRED".equalsIgnoreCase(webhookCode)){
+            Optional<PlaidItem> x = plaidItemRepository.findByPlaidItemId(itemId);
+            if(x.isPresent()){x.get().setUpdate(true);}
+        }
 
         return ResponseEntity.ok("Received");
     }

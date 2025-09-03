@@ -1,4 +1,5 @@
 export class AccountItem {
+
   accountId: string;
   name: string;
   officialName: string;
@@ -12,6 +13,7 @@ export class AccountItem {
   lastStatementDate: string | null;
   nextPaymentDueDate: string | null;
   minimumPaymentAmount: number | null;
+  status: boolean;
 
   constructor(
     accountId: string,
@@ -40,6 +42,7 @@ export class AccountItem {
     this.lastStatementDate = lastStatementDate;
     this.nextPaymentDueDate = nextPaymentDueDate;
     this.minimumPaymentAmount = minimumPaymentAmount;
+    this.status=false;
   }
 }
 

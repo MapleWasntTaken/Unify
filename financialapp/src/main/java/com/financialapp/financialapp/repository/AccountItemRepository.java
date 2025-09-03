@@ -30,7 +30,6 @@ public interface AccountItemRepository extends JpaRepository<AccountItem, Long> 
     // ❌ Delete all accounts under a specific PlaidItem (e.g. when unlinking)
     void deleteByPlaidItem(PlaidItem plaidItem);
 
-    //@Query("SELECT a FROM AccountItem WHERE a.account_id = :accountId AND p CONTAINING  ")
     void deleteByaccountId(String accountId);
 
     // ✅ Check if an account already exists (for sync deduping)
