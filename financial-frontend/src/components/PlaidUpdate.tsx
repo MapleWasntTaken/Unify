@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+/**import { useEffect, useState } from "react";
 import { useBankData } from "../hooks/UseBankData";
 import { GetCsrf } from "../utils/GetCSRF";
 export function PlaidUpdate(){
@@ -35,4 +35,4 @@ export function PlaidUpdate(){
     },[accounts])
 
     return <>Cum fart</>;
-}
+}**/

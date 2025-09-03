@@ -102,7 +102,7 @@ public class SecurityConfiguration{
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173","https://unifyfinance.ca")
+                        .allowedOrigins("https://unifyfinance.ca")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowCredentials(true);
             }
