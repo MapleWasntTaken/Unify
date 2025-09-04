@@ -10,7 +10,7 @@ export default defineConfig({
       '/api': {
         target: 'https://api.unifyfinance.ca',
         changeOrigin: true,
-        secure: false,
+        secure: true,
         xfwd:true,
         cookieDomainRewrite: '',
         cookiePathRewrite: '/',
