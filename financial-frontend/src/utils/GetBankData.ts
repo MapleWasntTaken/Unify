@@ -11,7 +11,6 @@ export function isBankDataLoaded(): boolean {
 }
 
 export async function GetBankDetails(): Promise<void> {
-  console.log("we're here");
   if (isLoaded) return;
 
   if (!csrf) {
@@ -32,7 +31,6 @@ export async function GetBankDetails(): Promise<void> {
   const Accounts = data.Accounts;
   const Transactions = data.Transactions;
   const Statuses = data.Statuses;
-  console.log(data);
   const parsedAccounts: AccountItem[] = [];
   const grouped = new Map<string, TransactionItem[]>();
 
@@ -83,7 +81,7 @@ export async function GetBankDetails(): Promise<void> {
 
       return;
     }
-    if(x.Update ==="True"){
+    if(x.Update ==="true"){
       parsedAccounts.forEach((y)=>{
         if( y.accountId===x.AccountId){
             y.status = true;

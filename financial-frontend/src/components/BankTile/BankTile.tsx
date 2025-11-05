@@ -68,13 +68,7 @@ export function BankTile({disabled, ...account }: Props) {
           </div>
         </div>
 
-        {!isCreditCard && account.availableBalance != null && (
-          <div className={isDark ? "bank-tile-avbalance-dark" : "bank-tile-avbalance-light"}>
-            <h2 className={isDark ? "tile-avbal-header-dark" : "tile-avbal-header-light"}>
-              {fmtMoney(account.availableBalance)} <span className="label-inline">Available Balance</span>
-            </h2>
-          </div>
-        )}
+        
       </button>
 
       <AccountOverlay

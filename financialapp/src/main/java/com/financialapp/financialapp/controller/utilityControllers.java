@@ -154,7 +154,6 @@ public class utilityControllers {
         data.put("Transactions",transactions);
         data.put("Statuses",accountStatus);
         
-        System.out.println(data);
         return ResponseEntity.ok(data);
 
     }

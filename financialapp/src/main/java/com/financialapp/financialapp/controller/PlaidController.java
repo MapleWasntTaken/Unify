@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financialapp.financialapp.config.Env;
 import com.financialapp.financialapp.model.AccountItem;
+import com.financialapp.financialapp.model.ApplicationUser;
 import com.financialapp.financialapp.model.PlaidItem;
 import com.financialapp.financialapp.repository.AccountItemRepository;
 import com.financialapp.financialapp.repository.PlaidItemRepository;
@@ -73,6 +74,46 @@ public class PlaidController {
         ResponseEntity<String> response = restTemplate.postForEntity(
             "https://production.plaid.com/link/token/create", request, String.class);
 
+        return response;
+    }
+    @PostMapping("/create-update-token")
+    public ResponseEntity<String> createUpdateToken(@RequestBody Map<String,String> payload) {
+        
+        String accountId = payload.get("accountId");
+        ApplicationUser AppUser = currentUserService.getCurrentUser();
+        Integer userId = AppUser.getUserId();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String AccessToken = "";
+
+        
+        Optional<PlaidItem> hgg = plaidItemRepository.findByAccountItemId(accountId);
+        if (hgg.isPresent()) {
+            AccessToken = hgg.get().getAccessToken();
+            System.out.println("\n\n\n\n here");
+        }
+
+
+
+        Map<String, Object> user = Map.of("client_user_id", "user-" + userId);
+        Map<String, Object> update = Map.of("account_selection_enabled", true);
+        Map<String, Object> body = Map.of(
+            "client_id", Env.PLAID_CLIENT_ID,
+            "secret", Env.PLAID_SECRET,
+            "user", user,
+            "update", update,
+            "access_token", AccessToken,
+            "client_name", "FinancialApp",
+            "country_codes", List.of("US", "CA"),
+            "language", "en",
+            "webhook","api.unifyfinance.ca/api/plaid/webhook"
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+            "https://production.plaid.com/link/token/create", request, String.class);
+        
+        
         return response;
     }
 

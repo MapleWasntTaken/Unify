@@ -51,6 +51,10 @@ public class WebhookControllers {
             Optional<PlaidItem> x = plaidItemRepository.findByPlaidItemId(itemId);
             if(x.isPresent()){x.get().setUpdate(true);}
         }
+        if("PENDING_EXPIRATION".equalsIgnoreCase(webhookCode)){
+            Optional<PlaidItem> x = plaidItemRepository.findByPlaidItemId(itemId);
+            if(x.isPresent()){x.get().setUpdate(true);}
+        }
 
         return ResponseEntity.ok("Received");
     }
