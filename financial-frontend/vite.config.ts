@@ -8,9 +8,9 @@ export default defineConfig({
     host:true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://api.unifyfinance.ca',
         changeOrigin: true,
-        secure: false,
+        secure: true,
         xfwd:true,
         cookieDomainRewrite: '',
         cookiePathRewrite: '/',
