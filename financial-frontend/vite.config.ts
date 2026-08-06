@@ -4,11 +4,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['unifyfinance.ca', 'www.unifyfinance.ca'],
+    allowedHosts: ['localhost:8080',"localhost:5173"],
     host:true,
     proxy: {
       '/api': {
-        target: 'https://api.unifyfinance.ca',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: true,
         xfwd:true,

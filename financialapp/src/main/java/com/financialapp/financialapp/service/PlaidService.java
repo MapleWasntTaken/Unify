@@ -94,7 +94,7 @@ public class PlaidService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<String> accountGet = restTemplate.postForEntity(
-            "https://production.plaid.com/accounts/get",
+            "https://sandbox.plaid.com/accounts/get",
             request,
             String.class
         );
@@ -108,7 +108,7 @@ public class PlaidService {
             // Optional: prepare liabilities map in advance
             Map<String, JsonNode> liabilitiesMap = new HashMap<>();
             ResponseEntity<String> liabilitiesGet = restTemplate.postForEntity(
-                "https://production.plaid.com/liabilities/get",
+                "https://sandbox.plaid.com/liabilities/get",
                 request,
                 String.class
             );
@@ -196,7 +196,7 @@ public class PlaidService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<String> transget = restTemplate.postForEntity(
-            "https://production.plaid.com/transactions/get",
+            "https://sandbox.plaid.com/transactions/get",
             request,
             String.class
         );
@@ -261,7 +261,7 @@ public class PlaidService {
                 HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<String> res = restTemplate.postForEntity(
-            "https://production.plaid.com/item/remove",
+            "https://sandbox.plaid.com/item/remove",
             request,
             String.class
         );

@@ -8,5 +8,7 @@ public class Env {
     public static final String PLAID_CLIENT_ID = dotenv.get("PLAID_CLIENT_ID");
     public static final String PLAID_SECRET = dotenv.get("PLAID_SECRET");
     public static final String PLAID_ENV = dotenv.get("PLAID_ENV");
+
+    //Find out what this is
     public static final String ENCRYPTION_KEY = dotenv.get("ENCRYPTION_KEY");
 }

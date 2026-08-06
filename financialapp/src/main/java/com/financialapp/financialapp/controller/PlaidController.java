@@ -53,7 +53,9 @@ public class PlaidController {
 
     @GetMapping("/create-link-token")
     public ResponseEntity<String> createLinkToken() {
+
         Integer userId = currentUserService.getCurrentUserId();
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -72,7 +74,7 @@ public class PlaidController {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(
-            "https://production.plaid.com/link/token/create", request, String.class);
+            "https://sandbox.plaid.com/link/token/create", request, String.class);
 
         return response;
     }
@@ -111,7 +113,7 @@ public class PlaidController {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(
-            "https://production.plaid.com/link/token/create", request, String.class);
+            "https://sandbox.plaid.com/link/token/create", request, String.class);
         
         
         return response;
@@ -133,7 +135,7 @@ public class PlaidController {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(
-            "https://production.plaid.com/item/public_token/exchange", request, String.class);
+            "https://sandbox.plaid.com/item/public_token/exchange", request, String.class);
 
         try {
             ObjectMapper mapper = new ObjectMapper();
