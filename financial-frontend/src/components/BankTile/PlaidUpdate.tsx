@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { usePlaidLink } from "react-plaid-link";
 
 import { usePlaidUpdate } from "../../hooks/UsePlaidUpdate";
-import { GetCsrf } from "../../utils/GetCSRF";
 import { ResetBankDataCache } from "../../utils/GetBankData";
 
 type Props = {
@@ -64,41 +63,11 @@ function PlaidUpdateRunner({
   onDone: (accountId: string) => void;
   onExit: (accountId: string) => void;
 }) {
-  const [csrf, setCsrf] = useState<Record<string, string> | null>(null);
-
-  // Fetch CSRF once
-  useEffect(() => {
-    let mounted = true;
-    GetCsrf()
-      .then((t) => {
-        if (mounted) setCsrf(t);
-      })
-      .catch((e) => console.error("CSRF fetch failed", e));
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   // Hooks are always called (component is only rendered when token is ready)
   const { open, ready } = usePlaidLink({
     token,
-    onSuccess: async (public_token: string) => {
-      try {
-        const res = await fetch("/api/plaid/exchange-public-token", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            ...(csrf || {}),
-          },
-          body: JSON.stringify({ public_token }),
-        });
-        if (!res.ok) throw new Error(`Token exchange failed: ${res.status} ${res.statusText}`);
-      } catch (err) {
-        console.error("❌ Error exchanging token:", err);
-      } finally {
-        onDone(accountId);
-      }
+    onSuccess: () => {
+      onDone(accountId);
     },
     onExit: () => {
       onExit(accountId);

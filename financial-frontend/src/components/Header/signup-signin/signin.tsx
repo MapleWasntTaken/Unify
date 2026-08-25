@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { GetCsrf, WipeCSRF } from "../../../utils/GetCSRF";
+import { FetchWithCsrf, GetCsrf, WipeCSRF } from "../../../utils/GetCSRF";
 import { authState } from "../../../utils/authState";
 import {ResetBankDataCache } from "../../../utils/GetBankData";
 import "../../../css/SignIn.css";
@@ -22,7 +22,7 @@ export function SignIn({ onClose, onSwap}: { onClose: () => void; onSwap: () => 
         onSubmit={async (e) => {
           e.preventDefault();
           const formdata = new FormData(e.currentTarget);
-          const res = await fetch("/api/login", {
+          const res = await FetchWithCsrf("/api/login", {
             credentials: "include",
             method: "POST",
             body: new URLSearchParams(
@@ -30,7 +30,6 @@ export function SignIn({ onClose, onSwap}: { onClose: () => void; onSwap: () => 
             ),
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
-              ...csrf,
             },
           });
 

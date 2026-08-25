@@ -3,8 +3,8 @@ import { usePlaidLink } from "react-plaid-link";
 import type {
   PlaidLinkOnSuccessMetadata,
 } from "react-plaid-link";
-import { GetCsrf } from "../../utils/GetCSRF";
-import { GetBankDetails, ResetBankDataCache } from "../../utils/GetBankData";
+import { FetchWithCsrf, GetCsrf } from "../../utils/GetCSRF";
+import { ResetBankDataCache } from "../../utils/GetBankData";
 
 export function PlaidFrontend({ onClose }: { onClose: () => void }) {
   const [csrf, setCsrf] = useState<Record<string, string> | null>(null);
@@ -50,19 +50,21 @@ export function PlaidFrontend({ onClose }: { onClose: () => void }) {
       console.log("✅ Plaid link success:", metadata);
 
       try {
-        const res = await fetch("/api/plaid/exchange-public-token", {
+        const res = await FetchWithCsrf("/api/plaid/exchange-public-token", {
           method: "POST",
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            ...csrf!
           },
-          body: JSON.stringify({ public_token }),
+          body: JSON.stringify({
+            public_token,
+            institution_id: metadata.institution?.institution_id,
+            institution_name: metadata.institution?.name,
+          }),
         });
 
         if (!res.ok) throw new Error("Token exchange failed");
         ResetBankDataCache();
-        GetBankDetails();
         onClose();
       } catch (err) {
         console.error("❌ Error exchanging token or fetching bank data:", err);

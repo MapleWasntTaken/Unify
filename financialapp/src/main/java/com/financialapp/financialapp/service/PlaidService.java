@@ -1,23 +1,15 @@
 package com.financialapp.financialapp.service;
 
-
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.financialapp.financialapp.config.Env;
 import com.financialapp.financialapp.model.AccountItem;
 import com.financialapp.financialapp.model.ApplicationUser;
 import com.financialapp.financialapp.model.PlaidItem;
@@ -25,249 +17,184 @@ import com.financialapp.financialapp.model.TransactionItem;
 import com.financialapp.financialapp.repository.AccountItemRepository;
 import com.financialapp.financialapp.repository.PlaidItemRepository;
 import com.financialapp.financialapp.repository.TransactionItemRepository;
-import com.financialapp.financialapp.repository.UserRepository;
 
 @Service
 public class PlaidService {
-    
-
+    private static final Logger log = LoggerFactory.getLogger(PlaidService.class);
 
     private final TransactionItemRepository transactionItemRepository;
-
     private final PlaidItemRepository plaidItemRepository;
-
     private final AccountItemRepository accountItemRepository;
-
-    @Autowired
     private final CurrentUserService currentUserService;
-
-    private final UserRepository userRepository;
-
-    @Autowired
-    private final RestTemplate restTemplate;
+    private final PlaidApiClient plaidApiClient;
 
     public PlaidService(
         TransactionItemRepository transactionItemRepository,
-        RestTemplate restTemplate,
         PlaidItemRepository plaidItemRepository,
         AccountItemRepository accountItemRepository,
-        UserRepository userRepository,
-        CurrentUserService currentUserService
-        ){
+        CurrentUserService currentUserService,
+        PlaidApiClient plaidApiClient
+    ) {
         this.transactionItemRepository = transactionItemRepository;
-        this.restTemplate = restTemplate;
         this.plaidItemRepository = plaidItemRepository;
         this.accountItemRepository = accountItemRepository;
-        this.userRepository = userRepository;
         this.currentUserService = currentUserService;
+        this.plaidApiClient = plaidApiClient;
     }
 
     @Transactional
-    public void refreshPlaidItem(PlaidItem plaidItem){
-        try {
-            plaidItem.setFilled(true);
-            plaidItem.setUpdate(false);
-            refreshPlaidItemAccounts(plaidItem);
-            refreshPlaidItemTransactions(plaidItem);
-            
-
-        } catch (Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException("Failed to sync Plaid item", e);
-        }
-
-        
-        
+    public void refreshPlaidItem(PlaidItem plaidItem) {
+        log.info("Plaid synchronization started plaidItemId={}", plaidItem.getPlaidItemId());
+        refreshPlaidItemAccounts(plaidItem);
+        refreshPlaidItemTransactions(plaidItem);
+        plaidItem.setFilled(true);
+        plaidItem.setUpdate(false);
+        plaidItemRepository.save(plaidItem);
+        log.info("Plaid synchronization succeeded plaidItemId={} accountCount={}",
+            plaidItem.getPlaidItemId(), plaidItem.getAccountItems().size());
     }
-    @SuppressWarnings("UnnecessaryBoxing")
+
     public void refreshPlaidItemAccounts(PlaidItem plaidItem) {
         String accessToken = plaidItem.getAccessToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        plaidApiClient.validateTokenEnvironment("accounts-get", accessToken);
+        Map<String, Object> body = Map.of("access_token", accessToken);
 
-        Map<String, Object> body = Map.of(
-            "client_id", Env.PLAID_CLIENT_ID,
-            "secret", Env.PLAID_SECRET,
-            "access_token", accessToken
-        );
+        JsonNode accountsRoot = plaidApiClient.post("accounts-get", "/accounts/get", body);
+        JsonNode liabilitiesRoot = plaidApiClient.post("liabilities-get", "/liabilities/get", body);
+        JsonNode accounts = requiredArray(accountsRoot, "accounts", "accounts-get");
+        JsonNode creditLiabilities = liabilitiesRoot.path("liabilities").path("credit");
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        ResponseEntity<String> accountGet = restTemplate.postForEntity(
-            "https://sandbox.plaid.com/accounts/get",
-            request,
-            String.class
-        );
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(accountGet.getBody());
-            ApplicationUser currentUser = currentUserService.getCurrentUser();
-            JsonNode Accounts = root.get("accounts");
-
-            // Optional: prepare liabilities map in advance
-            Map<String, JsonNode> liabilitiesMap = new HashMap<>();
-            ResponseEntity<String> liabilitiesGet = restTemplate.postForEntity(
-                "https://sandbox.plaid.com/liabilities/get",
-                request,
-                String.class
-            );
-            JsonNode liabilitiesRoot = mapper.readTree(liabilitiesGet.getBody());
-            JsonNode creditLiabilities = liabilitiesRoot.path("liabilities").path("credit");
-
-            for (JsonNode liab : creditLiabilities) {
-                liabilitiesMap.put(liab.get("account_id").asText(), liab);
+        Map<String, JsonNode> liabilitiesByAccount = new HashMap<>();
+        if (creditLiabilities.isArray()) {
+            for (JsonNode liability : creditLiabilities) {
+                liabilitiesByAccount.put(requiredText(liability, "account_id"), liability);
             }
-
-            for (JsonNode ac : Accounts) {
-                String plaidAccountId = ac.get("account_id").asText();
-                Optional<AccountItem> existing = accountItemRepository
-                    .findByPlaidItem_UserAndAccountId(currentUser, plaidAccountId);
-
-                AccountItem ai = existing.orElse(new AccountItem());
-                ai.setAccountId(plaidAccountId);
-                ai.setPlaidItem(plaidItem);
-                ai.setName(ac.get("name").asText());
-                ai.setOfficialName(ac.get("official_name").asText());
-                ai.setSubtype(ac.get("subtype").asText());
-                ai.setMask(ac.get("mask").asText());
-                JsonNode balances = ac.get("balances");
-                ai.setCurrentBalance(balances.get("current").asDouble());
-
-                if (ai.getSubtype().equals("credit card")) {
-                    ai.setCreditLimit(balances.get("limit").asDouble());
-                    ai.setAvailableBalance(0D);
-
-                    
-                    JsonNode liab = liabilitiesMap.get(plaidAccountId);
-                    if (liab != null) {
-                        ai.setStatementBalance(liab.path("last_statement_balance").asDouble());
-
-                        String lastStatementStr = liab.path("last_statement_issue_date").asText(null);
-                        if (lastStatementStr != null && !lastStatementStr.isBlank()) {
-                            ai.setLastStatementDate(LocalDate.parse(lastStatementStr));
-                        } else {
-                            ai.setLastStatementDate(null);
-                        }
-
-                        String nextPaymentStr = liab.path("next_payment_due_date").asText(null);
-                        if (nextPaymentStr != null && !nextPaymentStr.isBlank()) {
-                            ai.setNextPaymentDueDate(LocalDate.parse(nextPaymentStr));
-                        } else {
-                            ai.setNextPaymentDueDate(null);
-                        }
-
-                        ai.setMinimumPaymentAmount(liab.path("minimum_payment_amount").asDouble());
-                    }
-
-
-                } else if (ai.getSubtype().equals("checking")) {
-                    ai.setAvailableBalance(balances.get("available").asDouble());
-                    ai.setCreditLimit(0D);
-                }
-
-                accountItemRepository.save(ai);
-                plaidItem.addAccountItem(ai);
-                plaidItemRepository.save(plaidItem);
-            }
-
-        } catch (Exception e) {
-            System.err.println("Transaction sync failed: " + e.getMessage());
-            e.printStackTrace();
         }
-}
 
-    public void refreshPlaidItemTransactions(PlaidItem plaidItem){
+        ApplicationUser currentUser = currentUserService.getCurrentUser();
+        for (JsonNode accountNode : accounts) {
+            String accountId = requiredText(accountNode, "account_id");
+            AccountItem account = accountItemRepository
+                .findByPlaidItem_UserAndAccountId(currentUser, accountId)
+                .orElseGet(AccountItem::new);
 
+            account.setAccountId(accountId);
+            account.setPlaidItem(plaidItem);
+            account.setName(textOrNull(accountNode, "name"));
+            account.setOfficialName(textOrNull(accountNode, "official_name"));
+            account.setSubtype(textOrNull(accountNode, "subtype"));
+            account.setMask(textOrNull(accountNode, "mask"));
+
+            JsonNode balances = accountNode.path("balances");
+            account.setCurrentBalance(doubleOrNull(balances, "current"));
+            account.setAvailableBalance(doubleOrNull(balances, "available"));
+            account.setCreditLimit(doubleOrNull(balances, "limit"));
+
+            JsonNode liability = liabilitiesByAccount.get(accountId);
+            if (liability != null) {
+                account.setStatementBalance(doubleOrNull(liability, "last_statement_balance"));
+                account.setLastStatementDate(dateOrNull(liability, "last_statement_issue_date"));
+                account.setNextPaymentDueDate(dateOrNull(liability, "next_payment_due_date"));
+                account.setMinimumPaymentAmount(doubleOrNull(liability, "minimum_payment_amount"));
+            }
+
+            accountItemRepository.save(account);
+            plaidItem.addAccountItem(account);
+        }
+        plaidItemRepository.save(plaidItem);
+    }
+
+    public void refreshPlaidItemTransactions(PlaidItem plaidItem) {
         String accessToken = plaidItem.getAccessToken();
-
-        
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> body = Map.of(
-            "client_id", Env.PLAID_CLIENT_ID,
-            "secret", Env.PLAID_SECRET,
+        plaidApiClient.validateTokenEnvironment("transactions-get", accessToken);
+        JsonNode root = plaidApiClient.post("transactions-get", "/transactions/get", Map.of(
             "access_token", accessToken,
             "start_date", LocalDate.now().minusDays(365).toString(),
             "end_date", LocalDate.now().toString()
-        );
+        ));
+        JsonNode transactions = requiredArray(root, "transactions", "transactions-get");
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+        Map<String, AccountItem> accountsById = new HashMap<>();
+        for (AccountItem account : plaidItem.getAccountItems()) {
+            accountsById.put(account.getAccountId(), account);
+        }
 
-        ResponseEntity<String> transget = restTemplate.postForEntity(
-            "https://sandbox.plaid.com/transactions/get",
-            request,
-            String.class
-        );
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(transget.getBody());
-            JsonNode transactions = root.get("transactions");
-            Map<String, AccountItem> accountItemMap = new HashMap<>();
-            for (AccountItem account : plaidItem.getAccountItems()) {
-                accountItemMap.put(account.getAccountId(), account);
-                
+        for (JsonNode transactionNode : transactions) {
+            String accountId = requiredText(transactionNode, "account_id");
+            AccountItem account = accountsById.get(accountId);
+            if (account == null) {
+                log.warn("Plaid transaction referenced an unknown account plaidItemId={}",
+                    plaidItem.getPlaidItemId());
+                continue;
             }
 
-            for (JsonNode tx : transactions) {
-                Optional<AccountItem> optionalAccountItem = accountItemRepository.findByPlaidItem_UserAndAccountId(plaidItem.getUser(),tx.get("account_id").asText());
-                TransactionItem t = null;
-                if (optionalAccountItem.isPresent()) {
-                    AccountItem accountItem = optionalAccountItem.get();
-                    t = transactionItemRepository.findByAccountItemAndTransactionId(accountItem,tx.get("transaction_id").asText()).orElse(new TransactionItem());
-                    t.setAccountId(accountItem.getAccountId());
-                
-                    t.setName(tx.get("name").asText());
-
-                    t.setAmount(tx.get("amount").asDouble());
-                    t.setDate(LocalDate.parse(tx.get("date").asText()));
-                    t.setCategory(tx.get("category") != null && tx.get("category").isArray()
-                        ? tx.get("category").get(0).asText()
-                        : "Uncategorized");
-                    t.setTransactionId(tx.get("transaction_id").asText());
-                    if (tx.has("iso_currency_code") && !tx.get("iso_currency_code").isNull()) {
-                        t.setIsoCurrencyCode(tx.get("iso_currency_code").asText());
-                    } else {
-                        t.setIsoCurrencyCode("");
-                    }
-
-                    String txAccountId = tx.get("account_id").asText();
-                    AccountItem txAcc = accountItemMap.get(txAccountId);
-                    if(txAcc!=null){
-                        t.setAccountItem(txAcc);
-                        txAcc.addTransaction(t);
-                        transactionItemRepository.save(t);
-                        accountItemRepository.save(txAcc);
-                    }
-                }
+            String transactionId = requiredText(transactionNode, "transaction_id");
+            TransactionItem transaction = transactionItemRepository
+                .findByAccountItemAndTransactionId(account, transactionId)
+                .orElse(null);
+            boolean newTransaction = transaction == null;
+            if (newTransaction) {
+                transaction = new TransactionItem();
             }
-            
-
-        } catch (Exception e) {
-            System.err.println("Transaction sync failed: " + e.getMessage());
+            transaction.setAccountId(accountId);
+            transaction.setTransactionId(transactionId);
+            transaction.setName(textOrNull(transactionNode, "name"));
+            transaction.setAmount(doubleOrNull(transactionNode, "amount"));
+            transaction.setDate(LocalDate.parse(requiredText(transactionNode, "date")));
+            transaction.setCategory(firstCategory(transactionNode));
+            transaction.setIsoCurrencyCode(textOrEmpty(transactionNode, "iso_currency_code"));
+            if (newTransaction) {
+                account.addTransaction(transaction);
+            }
+            transactionItemRepository.save(transaction);
         }
     }
 
-    public void removeItem(String s){
-        
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        Map<String, Object> body = Map.of(
-            "client_id", Env.PLAID_CLIENT_ID,
-            "secret", Env.PLAID_SECRET,
-            "access_token", s
-        );
-                HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        ResponseEntity<String> res = restTemplate.postForEntity(
-            "https://sandbox.plaid.com/item/remove",
-            request,
-            String.class
-        );
-        System.out.println(res.getBody()+"    res status:" + res.getStatusCode() );
+    public void removeItem(String accessToken) {
+        plaidApiClient.validateTokenEnvironment("item-remove", accessToken);
+        plaidApiClient.post("item-remove", "/item/remove", Map.of("access_token", accessToken));
     }
 
+    private static JsonNode requiredArray(JsonNode root, String field, String operation) {
+        JsonNode value = root.get(field);
+        if (value == null || !value.isArray()) {
+            throw new IllegalStateException("Plaid response for " + operation + " omitted " + field);
+        }
+        return value;
+    }
 
+    private static String requiredText(JsonNode node, String field) {
+        String value = textOrNull(node, field);
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException("Plaid response omitted " + field);
+        }
+        return value;
+    }
 
+    private static String textOrNull(JsonNode node, String field) {
+        JsonNode value = node.get(field);
+        return value == null || value.isNull() ? null : value.asText();
+    }
+
+    private static String textOrEmpty(JsonNode node, String field) {
+        String value = textOrNull(node, field);
+        return value == null ? "" : value;
+    }
+
+    private static Double doubleOrNull(JsonNode node, String field) {
+        JsonNode value = node.get(field);
+        return value == null || value.isNull() ? null : value.asDouble();
+    }
+
+    private static LocalDate dateOrNull(JsonNode node, String field) {
+        String value = textOrNull(node, field);
+        return value == null || value.isBlank() ? null : LocalDate.parse(value);
+    }
+
+    private static String firstCategory(JsonNode transaction) {
+        JsonNode category = transaction.get("category");
+        return category != null && category.isArray() && !category.isEmpty()
+            ? category.get(0).asText()
+            : "Uncategorized";
+    }
 }

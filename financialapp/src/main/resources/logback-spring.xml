@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <timestamp key="startupTimestamp" datePattern="yyyyMMdd-HHmmss"/>
+    <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+    <property name="PATTERN" value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%thread] [%X{requestId:-system}] %logger{40} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder><pattern>${PATTERN}</pattern></encoder>
+    </appender>
+
+    <appender name="SESSION_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_DIR}/unify-${startupTimestamp}.log</file>
+        <append>false</append>
+        <encoder><pattern>${PATTERN}</pattern></encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="SESSION_FILE"/>
+    </root>
+</configuration>

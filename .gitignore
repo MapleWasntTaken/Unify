@@ -31,5 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+.DS_Store
 .env
+.env*
+*.env
+!financialapp/.env.example
+application-local.properties
+application-secrets.properties
 node_modules/
+financial-frontend/dist/
+financialapp/logs/

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GetCsrf } from "../../../utils/GetCSRF";
+import { FetchWithCsrf, GetCsrf } from "../../../utils/GetCSRF";
 import "../../../css/SignIn.css";
 
 export function SignUp({ onClose, onSwap }: { onClose: () => void; onSwap: () => void }) {
@@ -53,12 +53,11 @@ export function SignUp({ onClose, onSwap }: { onClose: () => void; onSwap: () =>
             passwordRef.current?.setCustomValidity("");
           }
 
-          const res = await fetch("/api/signup", {
+          const res = await FetchWithCsrf("/api/signup", {
             method: "POST",
             body: JSON.stringify({ email, password }),
             headers: {
               "Content-Type": "application/json",
-              ...csrf,
             },
             credentials: "include",
           });

@@ -64,8 +64,8 @@ public class PlaidItem {
 
     @Override
     public String toString() {
-        return "PlaidItem [id=" + id + ", user=" + user + ", accessToken=" + accessToken + ", institutionId="
-                + institutionId + ", institutionName=" + institutionName;
+        return "PlaidItem [id=" + id + ", plaidItemId=" + plaidItemId
+                + ", institutionId=" + institutionId + ", institutionName=" + institutionName + "]";
     }
 
     public void addAccountItem(AccountItem ai){

@@ -4,7 +4,7 @@ import "../../css/ProfileMenu.css";
 import { useDarkMode } from "../../hooks/UseDarkMode";
 import { BankData } from "../../types/BankData";
 import { authState } from "../../utils/authState";
-import { GetCsrf, WipeCSRF } from "../../utils/GetCSRF";
+import { FetchWithCsrf, WipeCSRF } from "../../utils/GetCSRF";
 import SettingsScreen from "./SettingsScreen";
 
 export function ProfileMenu() {
@@ -35,12 +35,9 @@ export function ProfileMenu() {
   }, [open]);
 
   const handleLogout = async () => {
-    const csrf = await GetCsrf();
     BankData.clear();
-    await fetch("/api/logout", {
+    await FetchWithCsrf("/api/logout", {
       method: "POST",
-      credentials: "include",
-      headers: { ...csrf },
     });
     WipeCSRF();
     authState.set(false);

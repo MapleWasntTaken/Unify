@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Trash2, CreditCard, Building2, Wallet, PiggyBank } from "lucide-react";
 import { useDarkMode } from "../../hooks/UseDarkMode";
 import { useBankData } from "../../hooks/UseBankData";
-import { GetCsrf } from "../../utils/GetCSRF";
+import { FetchWithCsrf } from "../../utils/GetCSRF";
 import type { AccountItem } from "../../types/AccountItem";
 import "../../css/Settings.css";
 
@@ -34,11 +34,6 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
   const [accounts] = useBankData();                      
   const [localAccounts, setLocalAccounts] = useState<AccountItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [csrf, setCsrf] = useState<Record<string, string> | null>(null);
-
-  useEffect(() => {
-    GetCsrf().then(setCsrf);
-  }, []);
   useEffect(() => {
     if (accounts !== undefined && accounts !== null) {
       setIsLoading(false);
@@ -69,9 +64,9 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
 
     try {
       
-      const res = await fetch("/api/plaid/remove-item", {
+      const res = await FetchWithCsrf("/api/plaid/remove-item", {
         method: "POST",
-        headers: { "Content-Type": "text/plain" ,...csrf!},
+        headers: { "Content-Type": "text/plain" },
         body: acct.accountId,
         credentials: "include",
       });

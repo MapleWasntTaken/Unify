@@ -2,13 +2,9 @@ package com.financialapp.financialapp.controller;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,190 +12,152 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.financialapp.financialapp.config.Env;
 import com.financialapp.financialapp.model.AccountItem;
 import com.financialapp.financialapp.model.ApplicationUser;
 import com.financialapp.financialapp.model.PlaidItem;
 import com.financialapp.financialapp.repository.AccountItemRepository;
 import com.financialapp.financialapp.repository.PlaidItemRepository;
-import com.financialapp.financialapp.repository.UserRepository;
 import com.financialapp.financialapp.service.CurrentUserService;
+import com.financialapp.financialapp.service.PlaidApiClient;
 import com.financialapp.financialapp.service.PlaidService;
 
 @RestController
 @RequestMapping("/api/plaid")
 public class PlaidController {
+    private static final Logger log = LoggerFactory.getLogger(PlaidController.class);
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final CurrentUserService currentUserService;
+    private final PlaidItemRepository plaidItemRepository;
+    private final AccountItemRepository accountItemRepository;
+    private final PlaidService plaidService;
+    private final PlaidApiClient plaidApiClient;
 
-    @Autowired
-    private CurrentUserService currentUserService;
-
-    @Autowired
-    private PlaidItemRepository plaidItemRepository;
-
-    @Autowired
-    private AccountItemRepository accountItemRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PlaidService plaidService;
+    public PlaidController(
+        CurrentUserService currentUserService,
+        PlaidItemRepository plaidItemRepository,
+        AccountItemRepository accountItemRepository,
+        PlaidService plaidService,
+        PlaidApiClient plaidApiClient
+    ) {
+        this.currentUserService = currentUserService;
+        this.plaidItemRepository = plaidItemRepository;
+        this.accountItemRepository = accountItemRepository;
+        this.plaidService = plaidService;
+        this.plaidApiClient = plaidApiClient;
+    }
 
     @GetMapping("/create-link-token")
-    public ResponseEntity<String> createLinkToken() {
-
+    public ResponseEntity<JsonNode> createLinkToken() {
         Integer userId = currentUserService.getCurrentUserId();
+        log.info("Creating Plaid Link token userId={} environment={}",
+            userId, plaidApiClient.properties().environment());
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> user = Map.of("client_user_id", "user-" + userId);
-
-        Map<String, Object> body = Map.of(
-            "client_id", Env.PLAID_CLIENT_ID,
-            "secret", Env.PLAID_SECRET,
-            "user", user,
-            "client_name", "FinancialApp",
-            "products", List.of("transactions", "liabilities","assets"),
+        JsonNode response = plaidApiClient.post("link-token-create", "/link/token/create", Map.of(
+            "user", Map.of("client_user_id", "user-" + userId),
+            "client_name", plaidApiClient.properties().clientName(),
+            "products", List.of("transactions", "liabilities", "assets"),
             "country_codes", List.of("US", "CA"),
             "language", "en",
-            "webhook","api.unifyfinance.ca/api/plaid/webhook"
-        );
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(
-            "https://sandbox.plaid.com/link/token/create", request, String.class);
-
-        return response;
+            "webhook", plaidApiClient.properties().webhookUrl().toString()
+        ));
+        return ResponseEntity.ok(response);
     }
+
     @PostMapping("/create-update-token")
-    public ResponseEntity<String> createUpdateToken(@RequestBody Map<String,String> payload) {
-        
-        String accountId = payload.get("accountId");
-        ApplicationUser AppUser = currentUserService.getCurrentUser();
-        Integer userId = AppUser.getUserId();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        String AccessToken = "";
+    public ResponseEntity<JsonNode> createUpdateToken(@RequestBody Map<String, String> payload) {
+        String accountId = required(payload, "accountId");
+        ApplicationUser currentUser = currentUserService.getCurrentUser();
+        PlaidItem plaidItem = plaidItemRepository.findByAccountItemId(accountId)
+            .filter(item -> item.getUser().getUserId().equals(currentUser.getUserId()))
+            .orElseThrow(() -> new IllegalArgumentException("Account was not found"));
 
-        
-        Optional<PlaidItem> hgg = plaidItemRepository.findByAccountItemId(accountId);
-        if (hgg.isPresent()) {
-            AccessToken = hgg.get().getAccessToken();
-            System.out.println("\n\n\n\n here");
-        }
+        plaidApiClient.validateTokenEnvironment("update-link-token-create", plaidItem.getAccessToken());
+        log.info("Creating Plaid update token userId={} plaidItemId={} environment={}",
+            currentUser.getUserId(), plaidItem.getPlaidItemId(), plaidApiClient.properties().environment());
 
-
-
-        Map<String, Object> user = Map.of("client_user_id", "user-" + userId);
-        Map<String, Object> update = Map.of("account_selection_enabled", true);
-        Map<String, Object> body = Map.of(
-            "client_id", Env.PLAID_CLIENT_ID,
-            "secret", Env.PLAID_SECRET,
-            "user", user,
-            "update", update,
-            "access_token", AccessToken,
-            "client_name", "FinancialApp",
+        JsonNode response = plaidApiClient.post("update-link-token-create", "/link/token/create", Map.of(
+            "user", Map.of("client_user_id", "user-" + currentUser.getUserId()),
+            "update", Map.of("account_selection_enabled", true),
+            "access_token", plaidItem.getAccessToken(),
+            "client_name", plaidApiClient.properties().clientName(),
             "country_codes", List.of("US", "CA"),
             "language", "en",
-            "webhook","api.unifyfinance.ca/api/plaid/webhook"
-        );
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(
-            "https://sandbox.plaid.com/link/token/create", request, String.class);
-        
-        
-        return response;
+            "webhook", plaidApiClient.properties().webhookUrl().toString()
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/exchange-public-token")
-    public ResponseEntity<String> exchangePublicToken(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<Map<String, String>> exchangePublicToken(@RequestBody Map<String, String> payload) {
+        String publicToken = required(payload, "public_token");
+        plaidApiClient.validateTokenEnvironment("public-token-exchange", publicToken);
 
-        String publicToken = payload.get("public_token");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> body = Map.of(
-            "client_id", Env.PLAID_CLIENT_ID,
-            "secret", Env.PLAID_SECRET,
+        ApplicationUser currentUser = currentUserService.getCurrentUser();
+        log.info("Exchanging Plaid public token userId={} environment={}",
+            currentUser.getUserId(), plaidApiClient.properties().environment());
+        JsonNode response = plaidApiClient.post("public-token-exchange", "/item/public_token/exchange", Map.of(
             "public_token", publicToken
-        );
+        ));
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(
-            "https://sandbox.plaid.com/item/public_token/exchange", request, String.class);
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode node = mapper.readTree(response.getBody());
-
-            String accessToken = node.get("access_token").asText();
-            String plaidId = node.get("item_id").asText();
-
-            PlaidItem p = plaidItemRepository.findByUserAndAccessToken(currentUserService.getCurrentUser(), accessToken).orElse(new PlaidItem());
-            p.setUser(currentUserService.getCurrentUser());
-            p.setPlaidItemId(plaidId);
-            p.setAccessToken(accessToken);
-            p.setInstitutionId(payload.get("institution_id"));
-            p.setInstitutionName(payload.get("institution_name"));
-            p.setFilled(false);
-            p.setUpdate(false);
-            plaidItemRepository.save(p);
-
-        } 
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Token parse error");
+        JsonNode accessTokenNode = response.get("access_token");
+        JsonNode itemIdNode = response.get("item_id");
+        if (accessTokenNode == null || itemIdNode == null) {
+            throw new IllegalStateException("Plaid exchange response omitted required fields");
         }
-        return response;
+
+        String accessToken = accessTokenNode.asText();
+        String plaidItemId = itemIdNode.asText();
+        PlaidItem plaidItem = plaidItemRepository
+            .findByUserAndAccessToken(currentUser, accessToken)
+            .orElseGet(PlaidItem::new);
+        plaidItem.setUser(currentUser);
+        plaidItem.setPlaidItemId(plaidItemId);
+        plaidItem.setAccessToken(accessToken);
+        plaidItem.setInstitutionId(payload.get("institution_id"));
+        plaidItem.setInstitutionName(payload.get("institution_name"));
+        plaidItem.setFilled(false);
+        plaidItem.setUpdate(false);
+        plaidItemRepository.save(plaidItem);
+
+        log.info("Plaid item connected userId={} plaidItemId={}", currentUser.getUserId(), plaidItemId);
+        return ResponseEntity.ok(Map.of("status", "connected", "item_id", plaidItemId));
     }
+
     @Transactional
     @PostMapping("/remove-item")
-    public ResponseEntity<?> removeItem(@RequestBody String x){
-        System.out.println(x);
-        if (x == null) {
-            return ResponseEntity.badRequest().body("accountId is required");
+    public ResponseEntity<Map<String, String>> removeItem(@RequestBody String accountId) {
+        if (accountId == null || accountId.isBlank()) {
+            throw new IllegalArgumentException("accountId is required");
         }
-        AccountItem ai;
-        Optional<AccountItem> y = accountItemRepository.findByAccountId(x);
-        if(y.isPresent()){
-            ai = y.get();
-            if(ai.getPlaidItem().getAccountItems().size() == 1){
-                plaidService.removeItem(ai.getPlaidItem().getAccessToken());
-                plaidItemRepository.deleteByPlaidItemId(ai.getPlaidItem().getPlaidItemId());
-                ai.getPlaidItem().getUser().removePlaidItem(ai.getPlaidItem());
-                return ResponseEntity.ok("Plaid Item Removed");
-            }else{
-                accountItemRepository.deleteByaccountId(ai.getAccountId());
-                ai.getPlaidItem().removeAccountItem(ai);
-                return ResponseEntity.ok("Account Item Removed");
-            }
-        }
-        return ResponseEntity.status(404).body("AccountItem Not Found");
-    }
-    //@PostMapping("/create-link-token")
-    
-    /**@PostMapping("/refresh-item")
-    public ResponseEntity<ApplicationUser> refreshItem(){
-        ApplicationUser wrongTypeUser = currentUserService.getCurrentUser();
-        ApplicationUser currentUser = userRepository.getUserWithPlaidItems(wrongTypeUser.getUserId().longValue());
-        if(!(currentUser.getPlaidItems().isEmpty())){
-            for(PlaidItem plaidItem:currentUser.getPlaidItems()){
-                plaidService.refreshPlaidItem(plaidItem);
-            }
-        }
-        return ResponseEntity.ok(currentUser);
+        ApplicationUser currentUser = currentUserService.getCurrentUser();
+        AccountItem account = accountItemRepository
+            .findByPlaidItem_UserAndAccountId(currentUser, accountId)
+            .orElseThrow(() -> new IllegalArgumentException("Account was not found"));
 
-        
-    }**/
-    //this is commented out because it is working and i dont want to fully remove it in case its needed.
-    // It shouldn't really be needed because the frontend should never need to force refetch data, backend should have live data from webhooks
-    
+        PlaidItem plaidItem = account.getPlaidItem();
+        if (plaidItem.getAccountItems().size() == 1) {
+            plaidService.removeItem(plaidItem.getAccessToken());
+            plaidItemRepository.deleteByPlaidItemId(plaidItem.getPlaidItemId());
+            plaidItem.getUser().removePlaidItem(plaidItem);
+            log.info("Plaid item removed userId={} plaidItemId={}",
+                currentUser.getUserId(), plaidItem.getPlaidItemId());
+            return ResponseEntity.ok(Map.of("status", "item_removed"));
+        }
+
+        accountItemRepository.deleteByaccountId(account.getAccountId());
+        plaidItem.removeAccountItem(account);
+        log.info("Plaid account removed userId={} plaidItemId={}",
+            currentUser.getUserId(), plaidItem.getPlaidItemId());
+        return ResponseEntity.ok(Map.of("status", "account_removed"));
+    }
+
+    private static String required(Map<String, String> payload, String field) {
+        String value = payload.get(field);
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(field + " is required");
+        }
+        return value;
+    }
 }

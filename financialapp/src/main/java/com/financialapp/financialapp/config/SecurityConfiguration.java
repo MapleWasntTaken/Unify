@@ -36,9 +36,17 @@ public class SecurityConfiguration{
     }
 
     private final UserDetailsServiceImpl userDetailsService;
+    private final AppSecurityProperties securityProperties;
+    private final JsonAccessDeniedHandler accessDeniedHandler;
 
-    public SecurityConfiguration(UserDetailsServiceImpl userDetailsService) {
+    public SecurityConfiguration(
+        UserDetailsServiceImpl userDetailsService,
+        AppSecurityProperties securityProperties,
+        JsonAccessDeniedHandler accessDeniedHandler
+    ) {
         this.userDetailsService = userDetailsService;
+        this.securityProperties = securityProperties;
+        this.accessDeniedHandler = accessDeniedHandler;
     }
     
     @Bean
@@ -52,6 +60,7 @@ public class SecurityConfiguration{
                 
             )
             .exceptionHandling(e -> e
+                .accessDeniedHandler(accessDeniedHandler)
                 .authenticationEntryPoint((req, res, ex) -> 
                     res.sendError(HttpServletResponse.SC_UNAUTHORIZED)
                 )
@@ -82,7 +91,7 @@ public class SecurityConfiguration{
     @Bean
     public TokenBasedRememberMeServices rememberMeServices(UserDetailsService userDetailsService) {
         TokenBasedRememberMeServices rememberMeServices = new TokenBasedRememberMeServices(
-            "mySuperSecretKey",
+            securityProperties.rememberMeKey(),
             userDetailsService
         );
         rememberMeServices.setAlwaysRemember(false);
@@ -93,7 +102,7 @@ public class SecurityConfiguration{
 
     @Bean
     public RememberMeAuthenticationProvider rememberMeAuthenticationProvider() {
-        return new RememberMeAuthenticationProvider("mySuperSecretKey");
+        return new RememberMeAuthenticationProvider(securityProperties.rememberMeKey());
     }
 
     @Bean
